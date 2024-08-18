@@ -42,4 +42,6 @@ urlpatterns = [
     url(r'hidden-basic-auth/(?P<user>.*)/(?P<passwd>.*)$', views.hidden_basic_auth, name='hidden-basic-auth'),
     url(r'digest-auth/(?P<qop>.*)/(?P<user>.*)/(?P<passwd>.*)/(?P<algorithm>.*)$', views.digest_auth, name='digest-auth'),
     url(r'download/$', views.download, name='download'),
+    url(r'image/$', views.image, name='image'),
+    url(r'ogp/$', views.ogp, name='ogp'),
 ]

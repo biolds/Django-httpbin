@@ -1,3 +1,6 @@
+from io import BytesIO
+from PIL import Image
+
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseRedirect, HttpResponseBadRequest, StreamingHttpResponse
 from django.core import serializers
@@ -271,3 +274,37 @@ def download(request):
     response.headers['Content-Disposition'] = 'attachment; filename="file-%s.dat"' % size
     response.headers['Content-Type'] = 'application/octet-stream'
     return response
+
+
+def image(request):
+    try:
+        w = int(request.GET.get('w', 64))
+    except:
+        w = 64
+
+    try:
+        h = int(request.GET.get('h', 64))
+    except:
+        h = 64
+
+    w = min(w, 1024)
+    h = min(h, 1024)
+
+    img = Image.effect_mandelbrot((w, h), (-3, -2.5, 2, 2.5), 10)
+    buf = BytesIO()
+
+    format = request.GET.get('format', 'png')
+    content_type = 'image/png'
+
+    if format != 'png':
+        format = 'jpeg'
+        content_type = 'image/jpeg'
+
+    img.save(buf, format)
+    buf.seek(0)
+
+    return HttpResponse(buf, content_type=content_type)
+
+
+def ogp(request):
+    return render(request, 'bin/ogp.html')
