@@ -6,12 +6,15 @@ from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, Http
 from django.core import serializers
 from django.urls import reverse
 from django.template import loader
-from django.views.decorators.gzip import gzip_page 
+from django.views.decorators.gzip import gzip_page
 
 from urllib.parse import unquote
 import itertools
 import hashlib
-import json, zlib, random, base64
+import json
+import zlib
+import random
+import base64
 
 from .helpers import methods, get_headers, no_get
 
@@ -34,7 +37,7 @@ def ip(request):
 
 @methods(['GET', 'HEAD', 'OPTIONS'])
 def user_agent(request):
-    user_agent= request.META['HTTP_USER_AGENT']
+    user_agent = request.META['HTTP_USER_AGENT']
     return JsonResponse({'user-agent': user_agent}, json_dumps_params=JSON_FORMAT)
 
 
@@ -90,7 +93,7 @@ def gzip(request):
         'origin': request.META['REMOTE_ADDR'],
     }
     return JsonResponse(rep_dict, json_dumps_params=JSON_FORMAT)
-   
+
 
 @methods(['GET', 'HEAD', 'OPTIONS'])
 def deflate(request):
@@ -100,7 +103,9 @@ def deflate(request):
         'method': request.method,
         'origin': request.META['REMOTE_ADDR'],
     }
-    data = zlib.compress(json.dumps(rep_dict, **JSON_FORMAT).encode('utf-8'))[2:-4]#2-byte zlib header and 4-byte checksum
+    # 2-byte zlib header and 4-byte checksum
+    data = zlib.compress(json.dumps(
+        rep_dict, **JSON_FORMAT).encode('utf-8'))[2:-4]
     rep = HttpResponse(data, content_type='application/json')
     rep['Content-Encoding'] = 'deflate'
     rep['Content-Length'] = len(data)
@@ -124,7 +129,8 @@ def response_headers(request):
     headers = {k: v for k, v in rep.items()}
     headers['Content-Length'] = ''
     if request.META['QUERY_STRING']:
-        query_string_list = [qs.split('=', 1) for qs in unquote(request.META['QUERY_STRING']).split('&')]
+        query_string_list = [qs.split('=', 1) for qs in unquote(
+            request.META['QUERY_STRING']).split('&')]
         for k, v in query_string_list:
             rep[k] = v
             if k not in headers:
@@ -210,7 +216,7 @@ def basic_auth(requeset, user, passwd):
                     'user': user
                 }
                 return JsonResponse(rep_dict, json_dumps_params=JSON_FORMAT)
-    
+
     rep = HttpResponse(status=401)
     rep['WWW-Authenticate'] = "Basic realm='basic auth'"
     return rep
@@ -238,6 +244,7 @@ def md5(content):
     md.update(content.encode('utf-8'))
     return md.hexdigest()
 
+
 @methods(['GET', 'HEAD', 'OPTIONS'])
 def digest_auth(request, qop, user, passwd, algorithm):
     if qop not in ['auth', 'auth-int']:
@@ -246,10 +253,13 @@ def digest_auth(request, qop, user, passwd, algorithm):
     if 'HTTP_AUTHORIZATION' in request.META:
         auth = request.META['HTTP_AUTHORIZATION'].split(' ', 1)
         if auth[0] == 'Digest':
-            info_dict = { kv_list[0].strip(): kv_list[1].strip('"') for kv_list in [kv_str.split('=') for kv_str in auth[1].split(',')]}
+            info_dict = {kv_list[0].strip(): kv_list[1].strip('"') for kv_list in [
+                kv_str.split('=') for kv_str in auth[1].split(',')]}
             if info_dict['username'] == user:
-                ha1 = md5('{user}:{realm}:{passwd}'.format(user=user, realm=info_dict['realm'], passwd=passwd))
-                ha2 = md5('{method}:{uri}'.format(method=request.method, uri=info_dict['uri']))
+                ha1 = md5('{user}:{realm}:{passwd}'.format(
+                    user=user, realm=info_dict['realm'], passwd=passwd))
+                ha2 = md5('{method}:{uri}'.format(
+                    method=request.method, uri=info_dict['uri']))
                 response = md5('{ha1}:{nonce}:{nc}:{cnonce}:{qop}:{ha2}'.format(
                     ha1=ha1, nonce=info_dict['nonce'], nc=info_dict['nc'],
                     cnonce=info_dict['cnonce'], qop=info_dict['qop'], ha2=ha2))
@@ -259,7 +269,7 @@ def digest_auth(request, qop, user, passwd, algorithm):
                         'user': user
                     }
                     return JsonResponse(rep_dict, json_dumps_params=JSON_FORMAT)
-                    
+
     rep = HttpResponse(status=401)
     rep['WWW-Authenticate'] = 'Digest realm="%s", qop="%s", nonce="%s", opaque="%s", algorithm=%s' % (
         'digest', qop, '5', '5', algorithm)
