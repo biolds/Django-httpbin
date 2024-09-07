@@ -281,7 +281,7 @@ def download(request):
     size = int(request.GET.get('filesize', 1024))
     response = StreamingHttpResponse((b' ' for _ in range(size)))
     response.headers['Content-Length'] = size
-    response.headers['Content-Disposition'] = 'attachment; filename="file-%s.dat"' % size
+    response.headers['Content-Disposition'] = 'attachment; filename="file-%s.txt"' % size
     response.headers['Content-Type'] = 'application/octet-stream'
     return response
 
