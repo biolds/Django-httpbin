@@ -337,3 +337,10 @@ def image(request):
 
 def ogp(request):
     return render(request, "bin/ogp.html")
+
+
+def echo(request):
+    return HttpResponse(
+        request.body,
+        content_type=request.META.get("CONTENT_TYPE", "application/json"),
+    )

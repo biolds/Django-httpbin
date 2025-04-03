@@ -63,4 +63,5 @@ urlpatterns = [
     url(r"download/$", views.download, name="download"),
     url(r"image/$", views.image, name="image"),
     url(r"ogp/$", views.ogp, name="ogp"),
+    url(r"echo/$", views.echo, name="echo"),
 ]
